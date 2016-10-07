@@ -55,9 +55,14 @@ public class Server_6001 {
 
 		outToPeer.writeBytes("prsvr" + '\n'); //TODO for milestone 4 here check if entered first, just like a normal client
 
-//		Names.add("prsvr");
-//		outToClients.add(outToPeer);
-//		inFromClients.add(inFromPeer);
+		new Thread(){
+			public void run(){
+				try {coop();}catch(IOException e){e.printStackTrace();}
+			}
+		}.start();
+		//		Names.add("prsvr");
+		//		outToClients.add(outToPeer);
+		//		inFromClients.add(inFromPeer);
 	}
 
 
@@ -76,12 +81,10 @@ public class Server_6001 {
 				if(name.equals("prsvr")){
 					outToPeer=new DataOutputStream(client.getOutputStream());
 					inFromPeer=new BufferedReader(new InputStreamReader(client.getInputStream()));
-
-					//					Names.add("prsvr");
-					//					outToClients.add(outToPeer);
-					//					inFromClients.add(inFromPeer);
-
+					inFromClient=null;
+					outToClient=null;
 					System.out.println("Paired with other server");
+					coop();
 					break;
 				} else {
 					//					if(otherServerNames.contains(name)){outToClient.writeBytes("n"+ '\n');System.out.println("Rejected, waiting for another input"+ '\n');} //XXX debug may keep
@@ -94,8 +97,9 @@ public class Server_6001 {
 					//					}
 
 
-					if(Names.contains(name)){outToClient.writeBytes("n"+ '\n');System.out.println("Rejected, waiting for another input"+ '\n');} //XXX debug may keep
+					if(Names.contains(name)||chk(name)){outToClient.writeBytes("n"+ '\n');System.out.println("Rejected, waiting for another input"+ '\n');} //XXX debug may keep
 					else {
+
 						System.out.println("Accepted, "+name+" is in"+ '\n'); //XXX debug may keep
 						outToClient.writeBytes("y"+ '\n');
 						Names.add(name);
@@ -111,7 +115,7 @@ public class Server_6001 {
 
 		while(true){
 			//Law fi incoming transmission, process it and print it.
-			if(inFromClient.ready()){
+			if(inFromClient!=null && inFromClient.ready()){
 				String message = inFromClient.readLine();
 				System.out.println(message);//XXX debug, can keep
 
@@ -123,8 +127,8 @@ public class Server_6001 {
 						outToClients.get(destno).writeBytes(trans[1]+ '\n');
 					} else {
 						System.out.println("no local reciever");
-						outToClient.writeBytes("SERVER: Destination not found; specify an online target"+ '\n');
-						if(outToPeer!=null)outToPeer.writeBytes("fwdmsg" +  message.substring(4) + '\n');
+						
+						if(outToPeer!=null)outToPeer.writeBytes("fwdmsg" +  message.substring(4) + '\n');else outToClient.writeBytes("SERVER: Destination not found; specify an online target"+ '\n');
 					}
 
 				} else { //XXX handle name requests
@@ -142,18 +146,44 @@ public class Server_6001 {
 						} 
 					}
 				}
-
-				//Law el user wrote bye or quit it quits, kollo null.
-//				if(message.substring(0, 3).equalsIgnoreCase("BYE") || message.substring(0, 3).equalsIgnoreCase("QUIT")){
-//					//TODO exit and delete ties to the quitter
-//					int cncld = Names.indexOf(message.substring(3));
-//					Names.remove(cncld);
-//					Sockets.remove(cncld);
-//					outToClients.remove(cncld);
-//					inFromClients.remove(cncld);
-//				}
 			}
-			if(inFromPeer!=null && inFromPeer.ready()){
+		}
+	}
+
+
+
+	boolean chk(String name) throws IOException{
+		if(outToPeer == null) return false;
+		outToPeer.writeBytes("chck"+name+'\n');
+		String x = inFromPeer.readLine();
+		System.out.println("pass");
+		return x.trim().equals("y");
+	}
+
+
+	void propList(String x) throws IOException{
+		System.out.println("here");
+		for (int i = 0; i < Names.size(); i++) {
+			String r = "rqt"+x+ "tknzhrSERVER: " +Names.get(i)+'\n';
+			outToPeer.writeBytes(r);
+			System.out.println(r);
+		}
+		System.out.println("done propagating mem list");
+	}
+
+	private void MemberListResponse(String rqstee) throws IOException{
+		System.out.println("Getting Member list for " + rqstee);
+		DataOutputStream x = outToClients.get(Names.indexOf(rqstee));
+		for (int i = 0; i < Names.size(); i++) {
+			x.writeBytes("SERVER: " + Names.get(i) + "\n");
+			System.out.println("sent a name");
+		}
+		if(outToPeer!=null)outToPeer.writeBytes("fwdrqst"+rqstee+'\n');
+	}
+
+	private void coop() throws IOException{
+		while(true){
+			if(inFromPeer.ready()){
 				String message = inFromPeer.readLine();
 				System.out.println(message);//XXX debug, can keep
 
@@ -203,6 +233,19 @@ public class Server_6001 {
 										if(message.startsWith("rqt")){
 											String [] tkns = message.split("tknzhr");
 											outToClients.get(Names.indexOf(tkns[0].substring(3))).writeBytes(tkns[1] +'\n');
+										}else{
+											if(message.startsWith("chck")){
+												System.out.println("checking");
+												String n = message.substring(4);
+
+												if(Names.contains(n)){
+													System.out.println("mawgood");
+													outToPeer.writeBytes("y"+'\n');
+												}else{
+													System.out.println("la2 salka");
+													outToPeer.writeBytes("n"+'\n');
+												}
+											}
 										}
 									}
 								}
@@ -212,26 +255,7 @@ public class Server_6001 {
 				}
 			}
 		}
-	}
 
-	void propList(String x) throws IOException{
-		System.out.println("here");
-		for (int i = 0; i < Names.size(); i++) {
-			String r = "rqt"+x+ "tknzhrSERVER: " +Names.get(i)+'\n';
-			outToPeer.writeBytes(r);
-			System.out.println(r);
-		}
-		System.out.println("done propagating mem list");
-	}
-
-	private void MemberListResponse(String rqstee) throws IOException{
-		System.out.println("Getting Member list for " + rqstee);
-		DataOutputStream x = outToClients.get(Names.indexOf(rqstee));
-		for (int i = 0; i < Names.size(); i++) {
-			x.writeBytes("SERVER: " + Names.get(i) + "\n");
-			System.out.println("sent a name");
-		}
-		if(outToPeer!=null)outToPeer.writeBytes("fwdrqst"+rqstee+'\n');
 	}
 
 	//	private void PropagateMemberList(DataOutputStream x) throws IOException{

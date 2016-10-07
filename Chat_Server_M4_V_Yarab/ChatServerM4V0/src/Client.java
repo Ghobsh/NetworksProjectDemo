@@ -38,27 +38,16 @@ public class Client { //TODO STILL, MAKE SURE ERROR STATEMENTS ARE PRINTED WHEN 
 		//		System.out.println("Please Enter your name, so we can contact the server.");
 		frame.ChatLog.setText(frame.ChatLog.getText()+ "Please Enter your name, so we can contact the server." +'\n');
 
-
+		serverPort= frame.port;
 		//Socket, connect to any server socket at port 6000 (el server beat3na ya3ny).
 		//XXX Equivalent to "localhost" for doing both ends on the same PC
 		//XXX Or can be changed to the server computer's network name.
-		try{client = new Socket("0.0.0.0", 6000);}catch(Exception e){frame.ChatLog.setText(frame.ChatLog.getText()+ "Server down at the moment, please try again later" +'\n');}
+		try{client = new Socket("0.0.0.0", serverPort);}catch(Exception e){frame.ChatLog.setText(frame.ChatLog.getText()+ "Server down at the moment, please try again later" +'\n');}
 
 		//Input and output connections between client and server
 		inFromServer = new BufferedReader(new InputStreamReader(client.getInputStream()));
 		outToServer = new DataOutputStream(client.getOutputStream());
 
-
-		//		while(!accepted){
-		//			if(inFromGUI){
-		//				sendingmessage = frame.input.getText();
-		//				name = sendingmessage.trim();
-		//				inFromGUI = false;
-		//				System.out.println("choosen name is " + name);//XXX debug can keep
-		//				Join(name);
-		//				if(!accepted){System.out.println("Name already taken, please enter another name to attempt logging in.");frame.ChatLog.setText(frame.ChatLog.getText()+ "Name already taken, please enter another name to attempt logging in." +'\n');}
-		//			}
-		//		}
 		accepted=false;
 		while(true){
 			System.out.println("being productive");
@@ -149,7 +138,7 @@ public class Client { //TODO STILL, MAKE SURE ERROR STATEMENTS ARE PRINTED WHEN 
 				
 				frame.ChatLog.repaint();
 				frame.ChatLog.validate();
-
+				
 				//Law el server wrote bye or quit it quits, kollo null.
 				if(message.equalsIgnoreCase("BYE") || message.equalsIgnoreCase("QUIT")){
 					Quit();

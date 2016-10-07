@@ -58,9 +58,9 @@ public class ClientFrame extends JFrame {
 		setContentPane(contentPane);
 		contentPane.setLayout(null);
 		
-		String x = JOptionPane.showInputDialog("please enter the port of the server you want to connect to \n6000 or 6001", 6000);
+		String x = JOptionPane.showInputDialog("please enter the port of the server you want to connect to \n6000 to 6003", 6000);
 		
-		if(Integer.parseInt(x)==6001) port = 6001;
+		if(Integer.parseInt(x)==6001||Integer.parseInt(x)==6002||Integer.parseInt(x)==6003) port = Integer.parseInt(x);
 		
 		input = new JTextField();
 		input.addActionListener(new ActionListener() {
@@ -72,8 +72,10 @@ public class ClientFrame extends JFrame {
 				client.sendingmessage = input.getText();
 				System.out.println(input.getText());
 				client.inFromGUI = true;
+				
 				try {
 					client.help();
+					input.setText("");
 				} catch (UnknownHostException e) {
 					// TODO Auto-generated catch block
 					e.printStackTrace();
@@ -94,8 +96,10 @@ public class ClientFrame extends JFrame {
 				client.sendingmessage = input.getText();
 				System.out.println(input.getText());
 				client.inFromGUI = true;
+				
 				try {
 					client.help();
+					input.setText("");
 				} catch (UnknownHostException e) {
 					// TODO Auto-generated catch block
 					e.printStackTrace();
